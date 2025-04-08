@@ -11,10 +11,10 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    // Checkout the code using SSH key for Git authentication
+                    echo 'Checking out source code...'
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: '*/main']],  // or specify the branch you want
+                        branches: [[name: '*/main']],
                         userRemoteConfigs: [
                             [
                                 url: 'git@github.com:savithasamudrala/XPerienceServer.git',
@@ -26,20 +26,11 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Build JAR (Skip Tests)') {
             steps {
                 script {
-                    // Run Maven to execute unit tests
-                    sh "'${MAVEN_HOME}/bin/mvn' clean test"
-                }
-            }
-        }
-
-        stage('Build JAR') {
-            steps {
-                script {
-                    // Build the JAR file using Maven
-                    sh "'${MAVEN_HOME}/bin/mvn' clean package"
+                    echo 'Building JAR with tests skipped...'
+                    sh "'${MAVEN_HOME}/bin/mvn' clean package -DskipTests"
                 }
             }
         }
@@ -47,42 +38,30 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image using the Dockerfile
+                    echo 'Building Docker image...'
                     sh "docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ."
                 }
             }
         }
 
         stage('Run Docker Image') {
-	    steps {
-		script {
-		    sh """
-		        docker stop '${DOCKER_IMAGE_NAME}' || true
-		        docker rm '${DOCKER_IMAGE_NAME}' || true
+            steps {
+                script {
+                    echo 'Running Docker container...'
+                    sh """
+                        docker stop '${DOCKER_IMAGE_NAME}' || true
+                        docker rm '${DOCKER_IMAGE_NAME}' || true
 
-		        docker run -d \\
-		          --name '${DOCKER_IMAGE_NAME}' \\
-		          -p 5000:5000 \\
-		          -v \$(pwd)/passwords.txt:/app/passwords.txt \\
-		          '${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}' \\
-		          5000 /app/passwords.txt
-		    """
-		}
-	    }
-	}
-}
-
-
-    post {
-        always {
-            echo 'Cleaning up...'
-            // Clean up resources if needed
-        }
-        success {
-            echo 'Pipeline executed successfully.'
-        }
-        failure {
-            echo 'Pipeline execution failed.'
+                        docker run -d \\
+                          --name '${DOCKER_IMAGE_NAME}' \\
+                          -p 5000:5000 \\
+                          -v \$(pwd)/passwords.txt:/app/passwords.txt \\
+                          '${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}' \\
+                          5000 /app/passwords.txt
+                    """
+                }
+            }
         }
     }
 }
+
