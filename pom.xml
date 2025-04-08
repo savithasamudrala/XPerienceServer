@@ -105,8 +105,13 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>xps</classifier>
-                        </configuration>
+                          <classifier>xps</classifier>
+                          <archive>
+                              <manifest>
+                                  <mainClass>xperience.XPerienceServer</mainClass>
+                              </manifest>
+                          </archive>
+                      </configuration>
                     </execution>
 
                     <!-- XPerienceServerDB.jar -->
