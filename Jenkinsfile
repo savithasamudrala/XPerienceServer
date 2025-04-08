@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        MAVEN_HOME = tool 'Maven 3.6.3'
+        MAVEN_HOME = tool 'Maven 3.8.7'
         DOCKER_IMAGE_NAME = 'xperienceserver'
         DOCKER_IMAGE_TAG = 'latest'
     }
