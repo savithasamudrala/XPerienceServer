@@ -30,16 +30,17 @@ pipeline {
             steps {
                 script {
                     echo 'Running Maven unit tests...'
-                    sh "'${MAVEN_HOME}/bin/mvn' clean test"
+                    // Pass system properties server and port to Maven during test execution
+                    sh "'${MAVEN_HOME}/bin/mvn' clean test -Dserver=localhost -Dport=5000"
                 }
             }
         }
 
-        stage('Build JAR') {
+        stage('Build JAR (Skip Tests)') {
             steps {
                 script {
-                    echo 'Building JAR...'
-                    sh "'${MAVEN_HOME}/bin/mvn' clean package"
+                    echo 'Building JAR with tests skipped...'
+                    sh "'${MAVEN_HOME}/bin/mvn' clean package -DskipTests"
                 }
             }
         }
@@ -70,12 +71,6 @@ pipeline {
                     """
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline finished. Check above for success/failure.'
         }
     }
 }
