@@ -54,26 +54,23 @@ pipeline {
         }
 
         stage('Run Docker Image') {
-            steps {
-                script {
-                    // Stop any running container and run a new container from the built image
-                    sh "docker stop ${DOCKER_IMAGE_NAME} || true"
-                    sh "docker rm ${DOCKER_IMAGE_NAME} || true"
-                    sh """
-			docker stop ${DOCKER_IMAGE_NAME} || true
-			docker rm ${DOCKER_IMAGE_NAME} || true
+	    steps {
+		script {
+		    sh """
+		        docker stop '${DOCKER_IMAGE_NAME}' || true
+		        docker rm '${DOCKER_IMAGE_NAME}' || true
 
-			docker run -d \
-			  --name ${DOCKER_IMAGE_NAME} \
-			  -p 5000:5000 \
-			  -v $(pwd)/passwords.txt:/app/passwords.txt \
-			  ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} \
-			  5000 /app/passwords.txt
-			"""
-                }
-            }
-        }
-    }
+		        docker run -d \\
+		          --name '${DOCKER_IMAGE_NAME}' \\
+		          -p 5000:5000 \\
+		          -v \$(pwd)/passwords.txt:/app/passwords.txt \\
+		          '${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}' \\
+		          5000 /app/passwords.txt
+		    """
+		}
+	    }
+	}
+
 
     post {
         always {
