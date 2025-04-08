@@ -2,67 +2,54 @@ pipeline {
     agent any
 
     environment {
-        // Define environment variables here
-        MAVEN_HOME = '/usr/local/maven'          // Path to Maven
-        DOCKER_IMAGE = 'xperience_server_image'  // Docker image name
-        DOCKER_TAG = 'latest'                   // Docker image tag
-        GIT_REPO = 'https://github.com/savithasamudrala/XPerienceServer.git'  // GitHub repository URL
-        GIT_BRANCH = 'main'                     // Branch to checkout
-    }
-
-    tools {
-        // Define Maven version installed on Jenkins
-        maven 'Maven 3.6.3'
+        DOCKER_IMAGE = 'xperienceserver:latest'
+        MAVEN_HOME = '/usr/share/maven'  // Replace this with the correct Maven install path
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from GitHub
-                git branch: "${env.GIT_BRANCH}", url: "${env.GIT_REPO}"
+                // Pull the latest code from GitHub
+                git branch: 'main', credentialsId: 'GitHub-Credentials', url: 'git@github.com:savithasamudrala/XPerienceServer.git'
             }
         }
 
-        stage('Build') {
+        stage('Run Unit Tests') {
             steps {
-                // Run unit tests and build the executable JAR
-                script {
-                    echo "Running Maven build..."
-                    sh "${MAVEN_HOME}/bin/mvn clean test package"
-                }
+                // Run unit tests using Maven
+                sh "'${MAVEN_HOME}/bin/mvn' clean test"
+            }
+        }
+
+        stage('Build JAR') {
+            steps {
+                // Build the executable JAR file using Maven
+                sh "'${MAVEN_HOME}/bin/mvn' clean package"
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Build the Docker image
-                script {
-                    echo "Building Docker image..."
-                    sh """
-                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                    """
-                }
+                // Build Docker image from the Dockerfile
+                sh 'docker build -t ${DOCKER_IMAGE} .'
             }
         }
 
-        stage('Deploy Docker Image') {
+        stage('Run Docker Image') {
             steps {
-                // Run the Docker image, replacing any previously deployed container
-                script {
-                    echo "Deploying Docker image..."
-                    sh """
-                    docker rm -f ${DOCKER_IMAGE} || true
-                    docker run -d --name ${DOCKER_IMAGE} ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    """
-                }
+                // Run Docker container, replacing any previously deployed container
+                sh 'docker rm -f xperienceserver || true'
+                sh 'docker run -d --name xperienceserver -p 8080:8080 ${DOCKER_IMAGE}'
             }
         }
     }
 
     post {
-        // If the build fails, send an error message
+        success {
+            echo 'Pipeline completed successfully!'
+        }
         failure {
-            echo "Build failed. Please check the logs."
+            echo 'Pipeline failed.'
         }
     }
 }
