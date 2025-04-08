@@ -2,69 +2,67 @@ pipeline {
     agent any
 
     environment {
-        // Set any environment variables here, if needed
+        // Define environment variables here
+        MAVEN_HOME = '/usr/local/maven'          // Path to Maven
+        DOCKER_IMAGE = 'xperience_server_image'  // Docker image name
+        DOCKER_TAG = 'latest'                   // Docker image tag
+        GIT_REPO = 'https://github.com/savithasamudrala/XPerienceServer.git'  // GitHub repository URL
+        GIT_BRANCH = 'main'                     // Branch to checkout
+    }
+
+    tools {
+        // Define Maven version installed on Jenkins
+        maven 'Maven 3.6.3'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                // Checkout the code from GitHub
+                git branch: "${env.GIT_BRANCH}", url: "${env.GIT_REPO}"
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Build') {
             steps {
+                // Run unit tests and build the executable JAR
                 script {
-                    // Run unit tests using Maven
-                    sh 'mvn clean test'
-                }
-            }
-        }
-
-        stage('Build JAR') {
-            steps {
-                script {
-                    // Build the JAR file
-                    sh 'mvn clean package'
+                    echo "Running Maven build..."
+                    sh "${MAVEN_HOME}/bin/mvn clean test package"
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
+                // Build the Docker image
                 script {
-                    // Build Docker image
-                    sh 'docker build -t xperience-server .'
+                    echo "Building Docker image..."
+                    sh """
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    """
                 }
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Deploy Docker Image') {
             steps {
+                // Run the Docker image, replacing any previously deployed container
                 script {
-                    // Stop any running containers
-                    sh 'docker ps -q --filter "name=xperience-server" | xargs --no-run-if-empty docker stop'
-
-                    // Run the Docker container
-                    sh 'docker run -d --name xperience-server -p 8080:8080 xperience-server'
+                    echo "Deploying Docker image..."
+                    sh """
+                    docker rm -f ${DOCKER_IMAGE} || true
+                    docker run -d --name ${DOCKER_IMAGE} ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    """
                 }
             }
         }
     }
 
     post {
-        always {
-            echo 'Cleaning up...'
-            // Clean up Docker containers after the build
-            sh 'docker rm -f xperience-server || true'
-        }
-
-        success {
-            echo 'Pipeline succeeded!'
-        }
-
+        // If the build fails, send an error message
         failure {
-            echo 'Pipeline failed. Check logs.'
+            echo "Build failed. Please check the logs."
         }
     }
 }
