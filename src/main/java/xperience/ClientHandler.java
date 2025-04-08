@@ -111,7 +111,7 @@ public class ClientHandler implements Callable<Void> {
         Event event = new Event(name, date, time, description);
         eventStore.addEvent(event);
         logger.info("Accepted: Event '" + name + "' added successfully");
-        out.write("Aksept#" + eventStore.getEventCount() + "#");
+        out.write("Accept#" + eventStore.getEventCount() + "#");
     }
 
     /**
