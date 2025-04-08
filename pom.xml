@@ -71,11 +71,19 @@
                 <executions>
                     <!-- Default JAR (Main Artifact) -->
                     <execution>
-                        <id>default-jar</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
+                      <id>default-jar</id>
+                      <goals>
+                          <goal>jar</goal>
+                      </goals>
+                      <configuration>
+                          <archive>
+                              <manifest>
+                                <mainClass>xperience.XPerienceServer</mainClass>
+                              </manifest>
+                          </archive>
+                      </configuration>
+                  </execution>
+
 
                     <!-- DonaBase.jar -->
                     <execution>
